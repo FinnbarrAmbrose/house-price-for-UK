@@ -3,9 +3,9 @@
 ## 1 · Streamlit Dashboard
 
 - [ ] **page_summary.py**
-  - [ ] Intro text: project pitch & dataset blurb
-  - [ ] 10-row sample table (`st.dataframe`)
-  - [ ] KPI cards (R², MAE, RMSE)
+  - [ ] Replace hard-coded `MODEL_MAE / RMSE / R2` with an auto-load:
+        - Save `model_metrics.json` during training.
+        - Read JSON in `page_summary.py` and populate KPI cards.
 
 - [ ] **correlation_analysis.py**
   - [ ] Histogram & boxplot of `Price` (Plotly)
@@ -17,6 +17,7 @@
   - [ ] Load `house_price_model.pkl` + `model_columns.pkl`
   - [ ] Prediction output card (formatted £)
   - [ ] Display model MAE disclaimer
+  - [ ] Optional Future Improvement: Convert this model into a full pipeline that includes encoding, so prediction becomes more flexible.
 
 - [ ] **project_hypothesis.py**
   - [ ] Text summary of H1–H3 results + p-values
