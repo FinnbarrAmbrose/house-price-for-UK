@@ -3,54 +3,81 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import os
 
 def sales_price_prediction_body():
     st.title("🔮 Sale Price Prediction")
-    st.markdown("Use this tool to predict the estimated sale price of a UK property.")
+    st.write("Enter property details below and click **Predict Price** to get an estimated sale price.")
 
-    # --- Load model and column list ---
-    try:
-        model = joblib.load("outputs/models/house_price_model.pkl")
-        model_columns = joblib.load("outputs/models/model_columns.pkl")
-    except FileNotFoundError:
-        st.warning("Model files not found. Ensure 'house_price_model.pkl' and 'model_columns.pkl' exist.")
+    # ── 1) LOAD CLEANED DATA & PREPARE DATE RANGE ───────────────────────────────
+    data_path = "outputs/datasets/collection/HousePricesRecords_clean.csv"
+    df = pd.read_csv(data_path)
+    df["Date of Transfer"] = pd.to_datetime(df["Date of Transfer"])
+    max_date = df["Date of Transfer"].max()
+    min_date = max_date - pd.DateOffset(years=3)
+
+    # ── 2) LOAD TRAINED PIPELINE ────────────────────────────────────────────────
+    model_path = "outputs/models/house_price_pipeline.pkl"
+    if not os.path.exists(model_path):
+        st.error(f"Pipeline not found at {model_path!r}. Run Notebook 05 first.")
         return
+    pipeline = joblib.load(model_path)
 
-    # --- User Input Form ---
-    st.header("🏠 Enter Property Details:")
+    # ── 3) DEFINE PPD CATEGORY LABELS ───────────────────────────────────────────
+    ppd_map = {
+        "A": "Standard sale (market value)",
+        "B": "Other sale types (repossessions, buy-to-let, etc.)"
+    }
+    reverse_ppd = {v: k for k, v in ppd_map.items()}
 
-    col1, col2 = st.columns(2)
-    with col1:
-        year = st.slider("Year of Sale", 1995, 2024, 2020)
-        month = st.selectbox("Month of Sale", list(range(1, 13)))
-        old_new = st.selectbox("Property Age", ["Old", "New"])
-    with col2:
-        duration = st.selectbox("Tenure", ["Freehold", "Leasehold"])
-        property_type = st.selectbox("Property Type", ["Detached", "Flat", "Semi", "Terraced"])
+    # ── 4) BUILD THE INPUT FORM ─────────────────────────────────────────────────
+    with st.form("prediction_form"):
+        col1, col2 = st.columns(2)
 
-    if st.button("💰 Predict Price"):
-        # Build one-row DataFrame from inputs
-        input_dict = {
-            "Year": year,
-            "Month": month,
-            "Old/New": 1 if old_new == "New" else 0,
-            "Duration": 1 if duration == "Freehold" else 0,
-            "Property_D": property_type == "Detached",
-            "Property_F": property_type == "Flat",
-            "Property_S": property_type == "Semi",
-            "Property_T": property_type == "Terraced"
-        }
+        with col1:
+            transfer_date = st.date_input(
+                "Date of Transfer",
+                value=max_date.date(),
+                min_value=min_date.date(),
+                max_value=max_date.date()
+            )
+            year  = transfer_date.year
+            month = transfer_date.month
 
-        input_df = pd.DataFrame([input_dict])
+            ppd_label    = st.selectbox("Sale Category", options=list(ppd_map.values()))
+            ppd_category = reverse_ppd[ppd_label]
 
-        # Ensure all model columns are present
-        for col in model_columns:
-            if col not in input_df.columns:
-                input_df[col] = 0
+            old_new_label = st.radio("Is this a new build?", ("No", "Yes"))
+            old_new       = 1 if old_new_label == "Yes" else 0
 
-        input_df = input_df[model_columns]  # match model column order
+        with col2:
+            tenure_label = st.radio("Tenure", ("Leasehold", "Freehold"))
+            tenure       = 1 if tenure_label == "Freehold" else 0
 
-        # Predict
-        prediction = model.predict(input_df)[0]
-        st.success(f"🏷️ Predicted Sale Price: £{prediction:,.0f}")
-        st.caption("Note: Estimate is based on historical UK Land Registry data.")
+            region   = st.selectbox("Town/City", sorted(df["Town/City"].unique()))
+            county   = st.selectbox("County", sorted(df["County"].unique()))
+            prop_type = st.selectbox(
+                "Property Type",
+                ["Detached", "Flat", "Semi-Detached", "Terraced"]
+            )
+
+        submitted = st.form_submit_button("Predict Price")
+
+    # ── 5) RUN PREDICTION ────────────────────────────────────────────────────────
+    if submitted:
+        input_df = pd.DataFrame([{
+            "Year":                year,
+            "Month":               month,
+            "PPDCategory Type":    ppd_category,
+            "Old/New":             old_new,
+            "Duration":            tenure,
+            "Town/City":           region,
+            "County":              county,
+            "Property_D":          1 if prop_type == "Detached"      else 0,
+            "Property_F":          1 if prop_type == "Flat"          else 0,
+            "Property_S":          1 if prop_type == "Semi-Detached" else 0,
+            "Property_T":          1 if prop_type == "Terraced"      else 0
+        }])
+
+        price_pred = pipeline.predict(input_df)[0]
+        st.success(f"🏠 Estimated Sale Price: **£{price_pred:,.0f}**")
