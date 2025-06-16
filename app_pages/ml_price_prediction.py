@@ -3,96 +3,60 @@
 import streamlit as st
 import pandas as pd
 import joblib
-from pathlib import Path
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
-import plotly.express as px
-import numpy as np
-
-# Paths
-DATA_PATH   = Path("outputs/datasets/collection/HousePricesRecords_clean.csv")
-MODEL_PATH  = Path("outputs/models/house_price_model.pkl")
-COLS_PATH   = Path("outputs/models/model_columns.pkl")
+from sklearn.metrics import mean_absolute_error, r2_score
 
 def ml_price_prediction_body():
     st.title("🤖 Machine Learning Model")
-    st.markdown("Train/test metrics, residuals & feature importances for the regression model.")
+    st.write("Train/test metrics, residuals & feature importances for the regression model.")
 
-    # --- Load data & model ---
-    if not DATA_PATH.exists():
-        st.error("Cleaned data not found. Please run notebook 01 first.")
+    # 1) Load the pipeline
+    model_path = "outputs/models/house_price_pipeline.pkl"
+    try:
+        pipeline = joblib.load(model_path)
+    except FileNotFoundError:
+        st.error(f"Pipeline not found at {model_path!r}. Run Notebook 05 first.")
         return
-    if not MODEL_PATH.exists() or not COLS_PATH.exists():
-        st.error("Model or columns file missing. Run notebook 05 to generate them.")
-        return
 
-    df = pd.read_csv(DATA_PATH)
-    model = joblib.load(MODEL_PATH)
-    model_cols = joblib.load(COLS_PATH)
-
-    # --- Prepare features/target ---
-    y = df["Price"]
+    # 2) Reload the cleaned dataset and split again
+    df = pd.read_csv("outputs/datasets/collection/HousePricesRecords_clean.csv")
     X = df.drop(columns=["Price", "Date of Transfer"], errors="ignore")
-    X = pd.get_dummies(X, drop_first=True)
-
-    # ensure full column set
-    for c in model_cols:
-        if c not in X.columns:
-            X[c] = 0
-    X = X[model_cols]
-
-    # --- Train/test split ---
+    y = df["Price"]
+    
+    from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, shuffle=True
     )
 
-    # --- Compute metrics ---
-    def metrics(y_true, y_pred):
-        return {
-            "R²": r2_score(y_true, y_pred),
-            "MAE": mean_absolute_error(y_true, y_pred),
-            "RMSE": mean_squared_error(y_true, y_pred, squared=False),
-        }
+    # 3) Predict & compute metrics
+    y_train_pred = pipeline.predict(X_train)
+    y_test_pred  = pipeline.predict(X_test)
 
-    y_pred_train = model.predict(X_train)
-    y_pred_test  = model.predict(X_test)
+    train_mae = mean_absolute_error(y_train, y_train_pred)
+    test_mae  = mean_absolute_error(y_test,  y_test_pred)
+    train_r2  = r2_score(y_train, y_train_pred)
+    test_r2   = r2_score(y_test,  y_test_pred)
 
-    m_train = metrics(y_train, y_pred_train)
-    m_test  = metrics(y_test, y_pred_test)
+    st.subheader("Model Performance")
+    st.metric("Train MAE", f"£{train_mae:,.0f}", delta=None)
+    st.metric("Test MAE",  f"£{test_mae:,.0f}",  delta=None)
+    st.metric("Train R²",  f"{train_r2:.2f}",       delta=None)
+    st.metric("Test R²",   f"{test_r2:.2f}",        delta=None)
 
-    # --- Display metrics ---
-    st.subheader("🔧 Metrics")
-    cols = st.columns(3)
-    cols[0].metric("R² (train)", f"{m_train['R²']:.2f}", delta=f"{m_test['R²']-m_train['R²']:+.2f}")
-    cols[1].metric("MAE (train)", f"£{m_train['MAE']:,.0f}", delta=f"£{m_test['MAE']-m_train['MAE']:,.0f}")
-    cols[2].metric("RMSE (train)", f"£{m_train['RMSE']:,.0f}", delta=f"£{m_test['RMSE']-m_train['RMSE']:,.0f}")
+   
+    import numpy as np
+    import matplotlib.pyplot as plt
 
-    st.caption("Delta shows (test – train) change.")
-
-    # --- Actual vs Predicted scatter ---
-    st.subheader("📈 Actual vs Predicted Prices (test set)")
-    fig1 = px.scatter(
-        x=y_test, y=y_pred_test,
-        labels={"x":"Actual Sale Price", "y":"Predicted Sale Price"},
-        title="Actual vs Predicted"
+    # pull feature names from the preprocessor step
+    ohe = pipeline.named_steps["preprocessor"].named_transformers_["cat"]
+    cat_cols = ohe.get_feature_names_out(pipeline.named_steps["preprocessor"].transformers_[1][2])
+    feat_names = (
+        pipeline.named_steps["preprocessor"].transformers_[0][2]  # numeric_features
+        + list(cat_cols)
     )
-    fig1.add_shape(  # perfect prediction line
-        type="line", line=dict(dash="dash"),
-        x0=y_test.min(), x1=y_test.max(),
-        y0=y_test.min(), y1=y_test.max()
-    )
-    st.plotly_chart(fig1, use_container_width=True)
 
-    # --- Feature importance ---
-    st.subheader("🏅 Top 10 Feature Importances (coefficients)")
-    coefs = pd.Series(model.coef_, index=model_cols)
-    top10 = coefs.abs().sort_values(ascending=False).head(10).index
-    fig2 = px.bar(
-        x=coefs.loc[top10],
-        y=top10,
-        orientation="h",
-        labels={"x":"Coefficient", "y":""},
-        title="Top 10 Most Influential Features"
-    )
-    fig2.update_layout(yaxis=dict(autorange="reversed"))
-    st.plotly_chart(fig2, use_container_width=True)
+    importances = pipeline.named_steps["regressor"].feature_importances_
+    idx_sorted = np.argsort(importances)[-10:]  # top 10
+    plt.figure(figsize=(8, 5))
+    plt.barh(np.array(feat_names)[idx_sorted], importances[idx_sorted])
+    plt.title("Top 10 Feature Importances")
+    st.pyplot(plt)
