@@ -1,10 +1,10 @@
-# app_pages/page_summary.py
+
 import streamlit as st
 import pandas as pd
 from pathlib import Path
 
 # -----------------------------------------------------------------
-# Edit these three numbers whenever you retrain / improve the model
+# Edit these three numbers when improve the model
 MODEL_MAE  = 34_000     # £
 MODEL_RMSE = 49_000     # £
 MODEL_R2   = 0.69

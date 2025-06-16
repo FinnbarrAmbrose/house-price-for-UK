@@ -1,4 +1,4 @@
-# app_pages/multipage.py
+
 import streamlit as st
 
 
@@ -12,7 +12,7 @@ class MultiPage:
         self.pages = {}
         self.app_name = app_name
 
-    # -------- public API --------
+
     def add_page(self, title: str, func) -> None:
         """Register a page.  *title* is the label shown in the sidebar,
         *func* is the function that draws the page."""
@@ -23,5 +23,4 @@ class MultiPage:
         st.sidebar.title(self.app_name)
 
         page_name = st.sidebar.radio("Navigation", list(self.pages.keys()))
-        # Call the selected page’s draw function
         self.pages[page_name]()
