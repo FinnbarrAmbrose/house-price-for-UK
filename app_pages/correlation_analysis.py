@@ -13,18 +13,18 @@ def correlation_analysis_body() -> None:
     """EDA tab – distribution & correlation plots."""
     st.title("📊 Correlation Analysis")
 
-    # -----------------------------------------------------------
+    
     # 1 · Load data
-    # -----------------------------------------------------------
+
     if not DATA_PATH.exists():
         st.error("Cleaned dataset not found. Run notebook 01 to generate it.")
         return
 
     df = pd.read_csv(DATA_PATH)
 
-    # -----------------------------------------------------------
+
     # 2 · Sidebar filters
-    # -----------------------------------------------------------
+
     st.sidebar.header("Filter data ⬇️")
 
     years = sorted(df["Year"].unique())
@@ -37,9 +37,8 @@ def correlation_analysis_body() -> None:
 
     st.write(f"Filtered dataset: **{df_filt.shape[0]:,} rows**")
 
-    # -----------------------------------------------------------
     # 3 · Price distribution (hist + KDE)
-    # -----------------------------------------------------------
+
     st.subheader("💷 Price distribution")
 
     hist_fig = px.histogram(
@@ -53,9 +52,9 @@ def correlation_analysis_body() -> None:
     hist_fig.update_layout(yaxis_title="Count")
     st.plotly_chart(hist_fig, use_container_width=True)
 
-    # -----------------------------------------------------------
+
     # 4 · Correlation heat-map (toggle pearson / spearman)
-    # -----------------------------------------------------------
+
     st.subheader("🔗 Numeric correlations")
 
     method = st.radio(
