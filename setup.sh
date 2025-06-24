@@ -10,17 +10,11 @@ port = $PORT
 enableCORS = false
 EOF
 
-# ── 2) Execute your notebooks ───────────────────────────────────────────────────
-echo "📝 Executing notebooks via nbconvert…"
-jupyter nbconvert \
-  --to notebook \
-  --execute notebooks/clean_data.ipynb \
-  --output output/clean_data_out.ipynb
-
-jupyter nbconvert \
-  --to notebook \
-  --execute notebooks/train_model.ipynb \
-  --output output/train_model_out.ipynb
+echo "📝 Running notebooks to generate data and model…"
+jupyter nbconvert --to notebook --execute notebooks/01_clean_data.ipynb \
+  --output output/01_clean_data_out.ipynb
+jupyter nbconvert --to notebook --execute notebooks/02_train_model.ipynb \
+  --output output/02_train_model_out.ipynb
 
 # (add more notebooks as needed)
 
