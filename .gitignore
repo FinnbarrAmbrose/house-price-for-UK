@@ -8,4 +8,7 @@ node_modules/
 .github/
 cloudinary_python.txt
 kaggle.jsoninputs/datasets/raw/price_paid_records.csv
-inputs/datasets/raw/
+inputs/datasets/raw/inputs/datasets/raw/*.csv
+outputs/
+!outputs/datasets/collection/HousePricesRecords_clean.csv
+!outputs/models/house_price_pipeline.pkl
