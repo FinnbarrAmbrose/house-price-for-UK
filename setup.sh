@@ -3,30 +3,30 @@ set -euo pipefail
 
 echo "📝 Running all notebooks…"
 
-# Ensure output directories exist
-mkdir -p output
-mkdir -p models
+# 1) ensure writable folders exist under /app
+mkdir -p outputs/datasets/collection outputs/models
 
-# 1) Data Collection
-jupyter nbconvert --to notebook --execute "jupyter_notebooks/01 - Data Collection-1.ipynb" \
-    --output "outputs/01_Data_Collection_out.ipynb"
+# 2) execute each notebook in place, writing outputs back to /app/outputs
+pushd jupyter_notebooks > /dev/null
 
-# 2) Data Cleaning
-jupyter nbconvert --to notebook --execute "jupyter_notebooks/02_data_cleaning (1).ipynb" \
-    --output "outputs/02_Data_Cleaning_out.ipynb"
+NOTEBOOKS=(
+  "01 - Data Collection-1.ipynb"
+  "02_data_cleaning (1).ipynb"
+  "03 - Exploratory Data Analysis.ipynb"
+  "04 - Hypothesis Testing.ipynb"
+  "05_Model_Training_and_Evaluation.ipynb"
+)
 
-# 3) EDA
-jupyter nbconvert --to notebook --execute "jupyter_notebooks/03 - Exploratory Data Analysis.ipynb" \
-    --output "outputs/03_EDA_out.ipynb"
+for nb in "${NOTEBOOKS[@]}"; do
+  echo "⏳ Executing $nb"
+  jupyter nbconvert \
+    --to notebook \
+    --execute "$nb" \
+    --output "../outputs/${nb%.*}_out.ipynb" \
+    --ExecutePreprocessor.timeout=600
+done
 
-# 4) Hypothesis Testing
-jupyter nbconvert --to notebook --execute "jupyter_notebooks/04 - Hypothesis Testing.ipynb" \
-    --output "outputs/04_Hypothesis_Testing_out.ipynb"
+popd > /dev/null
 
-# 5) Training & Evaluation
-jupyter nbconvert --to notebook --execute "jupyter_notebooks/05_Model_Training_and_Evaluation.ipynb" \
-    --output "outputs/05_Model_Training_out.ipynb"
-
-echo "✅ All notebooks complete. Launching app…"
-
-exec streamlit run app.py
+echo "✅ All notebooks complete. Launching Streamlit…"
+exec streamlit run app.py --server.port="$PORT"
