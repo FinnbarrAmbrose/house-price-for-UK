@@ -235,14 +235,38 @@ we’ve identified several issues that are actively tracked in the repo’s Issu
 
 ## Credits / Acknowledgements
 - **Data source:** HM Land Registry “UK Housing Prices Paid” via Kaggle  
-- **Inspiration & Examples:**  
-  - Amareteklay’s `heritage-housing-issues` repository  
-  - smtilson’s `pp5-ml-dashboard` project  
-  - Mentor’s tutorial videos and guidance  
-- **Libraries & Tools:** scikit-learn, Streamlit, XGBoost, Yellowbrick, feature-engine, etc.  
-- **Collaborators:** Your mentor, classmates, or any code reviewers  
+- **Inspiration & Example Repos:**  
+  - Amareteklay’s [`heritage-housing-issues`](https://github.com/Amareteklay/heritage-housing-issues)  
+  - smtilson’s [`pp5-ml-dashboard`](https://github.com/smtilson/pp5-ml-dashboard)  
+- **Libraries & Tools:**  
+  scikit-learn, Streamlit, XGBoost, feature-engine, pandas, NumPy, Matplotlib, Plotly, SciPy, Yellowbrick, joblib, and others  
+- **Collaborators & Mentors:**  
+  - my project mentor [`Mo Shami`](https://www.linkedin.com/in/moshami/)
+  - classmates on Slack  
 
+### YouTube Tutorials & Learning Resources
+Here are some videos I found particularly helpful—replace with the ones you watched:
 
+- **Pandas Data Cleaning**  
+  *“Data Cleaning in Pandas | Python Pandas Tutorials”*  
+  `https://www.youtube.com/watch?v=bDhvCp3_lYw`
+
+- **Plotly EDA & Mapping**  
+  *“Introduction to Interactive Visualization: Plotly Express”*  
+  `https://www.youtube.com/watch?v=61YZaYnoWRQ`
+
+- **Statistical Testing with SciPy**  
+  *“How to Interpret the Output of Simple Linear Regression in Python”*  
+  `https://www.youtube.com/watch?v=NNrJDMhpWPA`
+
+- **Streamlit Dashboard Development**  
+  *“
+Build and Deploy a Multi-Page Web Application Using Python (Streamlit)”*  
+  `https://www.youtube.com/watch?v=9n4Ch2Dgex0`
+
+- **Deploying Streamlit Apps**  
+  *“Deploy Streamlit App on Heroku | Streamlit Tutorials”*  
+  `https://www.youtube.com/watch?v=W4CBnt0nLls`
 
 ## Future Work & Roadmap
 we’ve identified several enhancements to make the tool even more useful:
@@ -263,4 +287,3 @@ this project is licensed under the MIT License.
 feel free to reach out with questions or feedback:  
 - **GitHub:** [FinnbarrAmbrose](https://github.com/FinnbarrAmbrose)  
 - **LinkedIn:** [Finnbarr Ambrose](https://www.linkedin.com/in/finnbarr-ambrose-5682221b4/)  
-- **Email:** your.email@example.com  
